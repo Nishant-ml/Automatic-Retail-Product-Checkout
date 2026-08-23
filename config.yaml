@@ -1,0 +1,44 @@
+# -----------------------------------------------------------------------
+# Central config. Every path used to be hardcoded/duplicated across the
+# three notebooks (and some pointed at different Kaggle checkpoints for
+# different rows of Table II). Point everything here once.
+# -----------------------------------------------------------------------
+
+dataset:
+  root: "/path/to/retail-product-checkout-dataset"   # RPC dataset root
+  train_img_dir: "${dataset.root}/val2019"            # RPC uses val2019 split as the "train" DB pool
+  train_json: "${dataset.root}/instances_val2019.json"
+  test_img_dir: "${dataset.root}/test2019"
+  test_json: "${dataset.root}/instances_test2019.json"
+
+checkpoints:
+  # IMPORTANT: use the SAME yolo checkpoint for every embedder below.
+  # The original notebooks pointed each row of the results table at a
+  # different Kaggle-uploaded YOLO checkpoint, which is what made the
+  # detection-side numbers (mAP, mCIoU) shift between rows even though
+  # the detector isn't supposed to change. Keeping one path here makes
+  # that mistake structurally impossible.
+  yolo: "checkpoints/yolo_best.pt"
+  vae: "checkpoints/vae_best.pth"
+  dino: "checkpoints/dino_student.pth"
+
+faiss:
+  vae_index: "outputs/vae_embeddings.index"
+  vae_labels: "outputs/vae_labels.json"
+  dino_index: "outputs/dino_embeddings.index"
+  dino_labels: "outputs/dino_labels.json"
+
+embedding:
+  vae_latent_dim: 256
+  dino_arch: "dinov2_vits14"
+  image_size_vae: 128
+  image_size_dino: 224
+  knn_k: 5
+
+eval:
+  # cap on number of images scanned for DB-building / evaluation, so a
+  # smoke-test run doesn't require the full dataset. Set to null to use
+  # all images.
+  max_images: 2000
+  iou_match_threshold: 0.6   # crop-to-GT IoU required to label a training crop
+  device: "cuda"             # falls back to cpu automatically if unavailable
